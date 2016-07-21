@@ -1,0 +1,26 @@
+{
+  "name": "detechtive",
+  "version": "1.0.0",
+  "description": "Solution for UserMind's take home project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattdcamp/DeTECHtive.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattdcamp/DeTECHtive/issues"
+  },
+  "homepage": "https://github.com/mattdcamp/DeTECHtive#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  },
+  "dependencies": {
+    "commander": "^2.9.0"
+  }
+}
