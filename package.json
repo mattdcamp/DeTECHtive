@@ -4,6 +4,7 @@
   "description": "Solution for UserMind's take home project",
   "main": "index.js",
   "scripts": {
+    "detecht"
     "test": "mocha"
   },
   "repository": {
