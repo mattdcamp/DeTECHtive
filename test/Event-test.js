@@ -19,54 +19,89 @@ describe('Event', () => {
         });
     });
 
-    describe('traverse', () => {
-        it('should return itself if no children', () => {
-            var expected = ['id'],
-                event = new Event(expected[0]),
-                actual = event.traverse();
-            assert.deepEqual(actual, expected);
+    describe('equals', () => {
+        it('should be equal if id matches and no children', () => {
+            var e1, e2, id = 'one';
+            e1 = new Event(id);
+            e2 = new Event(id);
+
+            assert.isTrue(e1.equals(e2));
+            assert.isTrue(e2.equals(e1));
         });
 
-        it('should return array if single child', () => {
-            var expected = ['a', 'b'],
-                root, actual;
+        it('should not be equal if id does not match', () => {
+            var e1, e2;
+            e1 = new Event('one');
+            e2 = new Event('two');
 
-                root = new Event(expected[0]);
-                root.addChild(new Event(expected[1]));
-                actual = root.traverse();
-            assert.deepEqual(actual, expected);
+            assert.isFalse(e1.equals(e2));
+            assert.isFalse(e2.equals(e1));
         });
 
-        it('should return array of arrays with more than one child', () => {
-            var expected = [['a', 'b'], ['a', 'c']],
-                root, actual;
+        it('should be equal if id matches and children match', () => {
+            var e1, e2, a1, a2;
+            e1 = new Event('one');
+            e2 = new Event('two');
+            e1.nextEvent = e2;
 
-            root = new Event(expected[0][0]);
-            root.addChild(new Event(expected[0][1]));
-            root.addChild(new Event(expected[1][1]));
-            actual = root.traverse();
+            a1 = new Event('one');
+            a2 = new Event('two');
+            a1.nextEvent = a2;
 
-            assert.deepEqual(actual, expected);
+            assert.isTrue(e1.equals(a1));
+            assert.isTrue(a1.equals(e1));
         });
 
-        it('should support arrays that split down the tree', () => {
-            var expected = [['a', 'b', 'c'], ['a', 'b', 'd'], ['a', 'e']],
-                a, b, c, d, e, actual;
+        it('should not be equal if children do not match', () => {
+            var e1, e2, a1, a2;
+            e1 = new Event('one');
+            e2 = new Event('two');
+            e1.nextEvent = e2;
 
-            a = new Event(expected[0][0]);
-            b = new Event(expected[0][1]);
-            c = new Event(expected[0][2]);
-            d = new Event(expected[1][2]);
-            e = new Event(expected[2][1]);
+            a1 = new Event('one');
+            a2 = new Event('three');
+            a1.nextEvent = a2;
 
-            a.addChild(b);
-            a.addChild(e);
-            b.addChild(c);
-            b.addChild(d);
-
-            actual = a.traverse();
-
-            assert.deepEqual(actual, expected);
+            assert.isFalse(e1.equals(a1));
+            assert.isFalse(a1.equals(e1));
         });
     });
+
+    describe('isSubtree', () => {
+        it('should return true if nodes match', () => {
+            var e1, e2, a1, a2;
+            e1 = new Event('one');
+            e2 = new Event('two');
+            e1.nextEvent = e2;
+
+            a1 = new Event('one');
+            a2 = new Event('two');
+            a1.nextEvent = a2;
+
+            assert.isTrue(e1.isSubtree(a1));
+            assert.isTrue(e1.isSubtree(a1));
+        });
+
+        it('should return true if otherEvent is a subtree of the existing event', () => {
+            var e1, e2, a1;
+            e1 = new Event('one');
+            e2 = new Event('two');
+            e1.nextEvent = e2;
+
+            a1 = new Event('two');
+
+            assert.isTrue(e1.isSubtree(a1));
+        });
+
+        it('should return false if otherEvent is not a subtree', () => {
+            var e1, e2, a1;
+            e1 = new Event('one');
+            e2 = new Event('two');
+            e1.nextEvent = e2;
+
+            a1 = new Event('three');
+
+            assert.isFalse(e1.isSubtree(a1));
+        })
+    })
 });

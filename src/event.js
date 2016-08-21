@@ -6,35 +6,23 @@ var Event = class {
             throw new Error('Event requires an id');
         }
         this._id = id;
-        this._nextEvents = [];
+        this._nextEvent = undefined;
     }
 
-    addChild(event) {
-        this._nextEvents.push(event);
+    equals(otherEvent) {
+        return (this.id === otherEvent.id) &&
+            ((!this.nextEvent && !otherEvent.nextEvent) || (this.nextEvent.equals(otherEvent.nextEvent)))
     }
 
-    traverse() {
-        var i, j, output = [], childrenOutput = [], childOutput, currentChildArray;
-
-        for(i=0; i<this._nextEvents.length; i++) {
-            childOutput = this._nextEvents[i].traverse();
-            if(Array.isArray(childOutput[0])) {
-                for(j=0; j<childOutput.length; j++) {
-                    childOutput[j].unshift(this.id);
-                    childrenOutput.push(childOutput[j]);
-                }
-            } else {
-                childOutput.unshift(this.id);
-                childrenOutput.push(childOutput);
+    isSubtree(otherEvent) {
+        var output = false, nextEvent;
+        nextEvent = this;
+        while(nextEvent) {
+            if(nextEvent.equals(otherEvent)) {
+                output = true;
+                break;
             }
-        }
-
-        if(childrenOutput.length === 0) {
-            output = [this.id];
-        } else if(childrenOutput.length === 1) {
-            output = childrenOutput[0];
-        } else {
-            output = childrenOutput;
+            nextEvent = nextEvent.nextEvent;
         }
         return output;
     }
@@ -43,6 +31,13 @@ var Event = class {
         return this._id;
     }
 
+    get nextEvent() {
+        return this._nextEvent;
+    }
+
+    set nextEvent(event) {
+        this._nextEvent = event;
+    }
 };
 
 module.exports = Event;

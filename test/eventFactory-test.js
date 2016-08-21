@@ -22,16 +22,6 @@ describe('eventFactory', () => {
             assert.equal(actual.id, expectedId);
         });
 
-        it('should return the same instance of an object if it already exists', () => {
-            var e1 = eventFactory.create('e1'),
-                e2 = eventFactory.create('e1');
-
-            // by changing something in e1, before we compare we are making sure we are looking at the same instance
-            // because the reference is the same, both should have the new ID
-            e1._id = 'something changed';
-            assert.deepEqual(e1, e2);
-        });
-
         it('should throw an exception if id is undefined', () => {
             assert.throws(() => {
                 eventFactory.create();
@@ -43,57 +33,83 @@ describe('eventFactory', () => {
     });
 
     describe('createTimeline', () => {
-        it('should create a new root for new timelines', () => {
-            var expectedRoots = ['e1', 'e2'], actual;
-            eventFactory.createTimeline([expectedRoots[0]]);
-            eventFactory.createTimeline([expectedRoots[1]]);
-            actual = eventFactory.getRoots();
+        it('should create a timeline with multiple events', () => {
+            var input = ["e1", "e2", "e3"],
+                e1 = new Event(input[0]),
+                e2 = new Event(input[1]),
+                e3 = new Event(input[2]),
+                actual = eventFactory.createTimeline(input);
+            e1.nextEvent = e2;
+            e2.nextEvent = e3;
 
-            assert.deepEqual(_.map(actual, 'id'), expectedRoots);
-        });
-
-        it('should reuse roots if one already exists', () => {
-            var expectedRoots = ['e1'], actual;
-            eventFactory.createTimeline([expectedRoots[0]]);
-            eventFactory.createTimeline([expectedRoots[0], 'e2']);
-            actual = eventFactory.getRoots();
-
-            assert.deepEqual(_.map(actual, 'id'), expectedRoots);
-        });
-
-        it('should create create a simple chain', () => {
-            var expectedNodes = ['e1', 'e2', 'e3'], roots;
-            eventFactory.createTimeline(expectedNodes);
-            roots = eventFactory.getRoots();
-
-            assert.equal(roots.length, 1);
-            assert.equal(roots[0].id, expectedNodes[0]);
-            assert.equal(roots[0]._nextEvents[0].id, expectedNodes[1]);
-            assert.equal(roots[0]._nextEvents[0]._nextEvents[0].id, expectedNodes[2]);
-        });
-
-        it('should not create a root if already defined', () => {
-            var expectedRoots = 'e1', roots;
-            eventFactory.createTimeline([expectedRoots, 'e2']);
-            eventFactory.createTimeline(['e2']);
-
-            roots = eventFactory.getRoots();
-            assert.equal(roots.length, 1);
-            assert.equal(roots[0].id, expectedRoots);
-        });
-
-        it('should throw an exception if not an array', () => {
-            assert.throws(() => {
-                eventFactory.createTimeline();
-            }, Error, 'idArray must be an array');
-
-            assert.throws(() => {
-                eventFactory.createTimeline('id');
-            }, Error, 'idArray must be an array');
-
-            assert.throws(() => {
-                eventFactory.createTimeline({});
-            }, Error, 'idArray must be an array');
+            assert.deepEqual(actual, e1);
         });
     });
+
+    describe('merge lists', () => {
+        function createBaseTree() {
+            var e1 = new Event('1'),
+                e2 = new Event('2'),
+                e3 = new Event('3');
+            e1.nextEvent = e2;
+            e2.nextEvent = e3;
+            return e1;
+        }
+
+        it('should push a new timeline if _roots is empty', () => {
+            var event = new Event('1'),
+                expectedRoots = [event],
+                actual = eventFactory.merge(event);
+            assert.isFalse(actual);
+            assert.deepEqual(eventFactory.getRoots(), expectedRoots);
+        });
+
+        it('should merge lists if they are the same', () => {
+            var o1 = createBaseTree(),
+                n1 = createBaseTree(),
+                actual;
+            eventFactory.merge(o1);
+            actual = eventFactory.merge(n1);
+
+            assert.isTrue(actual);
+            assert.deepEqual([o1], eventFactory._roots);
+        });
+
+        it('should merge if existing root is a subtree of the newTimeline', () => {
+            var o1 = createBaseTree(),
+                n1 = createBaseTree(),
+                newEvent = new Event('NEW'),
+                actual;
+            eventFactory.merge(o1);
+
+            newEvent.nextEvent = n1;
+            n1 = newEvent;
+            actual = eventFactory.merge(n1);
+
+            assert.isTrue(actual);
+            assert.deepEqual([n1], eventFactory._roots);
+        });
+
+        it('should merge if newTimeline is a subtree of an existing root', () => {
+            var o1 = createBaseTree(),
+                n1 = createBaseTree(),
+                newEvent = new Event('NEW'),
+                actual;
+            newEvent.nextEvent = o1;
+            o1 = newEvent;
+            eventFactory.merge(o1);
+            actual = eventFactory.merge(n1);
+
+            assert.isTrue(actual);
+            assert.deepEqual([o1], eventFactory._roots);
+        });
+
+        it('can merge an element to the end of the list', () => {
+
+        });
+
+        it('should merge if newTimeline is a subset of existing root', () => {
+
+        });
+    })
 });
